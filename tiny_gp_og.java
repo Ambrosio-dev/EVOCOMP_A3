@@ -1,5 +1,5 @@
 /*
- * Program:   tiny_gp.java
+ * Program:   tiny_gp_og.java
  *
  * Author:    Riccardo Poli (email: rpoli@essex.ac.uk)
  *
@@ -9,19 +9,20 @@ import java.util.*;
 import java.io.*;
 import java.text.DecimalFormat;
 
-public class tiny_gp {
-  String fname = "problem.txt"; 
+public class tiny_gp_og {
+  String fname = "problem_og.txt"; 
   double [] fitness;
   char [][] pop;
   static Random rd = new Random();
   static final int
-    AND = 110,
-    OR = 111,
-    NOT = 112,
-    FSET_START = AND,
-    FSET_END = NOT;
-  static boolean [] x = new boolean[FSET_START];
-  static boolean minrandom, maxrandom;
+    ADD = 110,
+    SUB = 111,
+    MUL = 112,
+    DIV = 113,
+    FSET_START = ADD,
+    FSET_END = DIV;
+  static double [] x = new double[FSET_START];
+  static double minrandom, maxrandom;
   static char [] program;
   static int PC;
   static int varnumber, fitnesscases, randomnumber;
@@ -39,16 +40,23 @@ public class tiny_gp {
     CROSSOVER_PROB = 0.9;
   static double [][] targets;
 
-  boolean run() { /* Interpreter */
+  double run() { /* Interpreter */
     char primitive = program[PC++];
     if ( primitive < FSET_START )
       return(x[primitive]);
     switch ( primitive ) {
-      case AND : return( run() && run() );
-      case OR : return( run() || run() );
-      case NOT : return( !(run()) );
+      case ADD : return( run() + run() );
+      case SUB : return( run() - run() );
+      case MUL : return( run() * run() );
+      case DIV : {
+        double num = run(), den = run();
+        if ( Math.abs( den ) <= 0.001 )
+          return( num );
+        else
+          return( num / den );
+        }
       }
-    return( false ); // should never get here
+    return( 0.0 ); // should never get here
   }
 
   int traverse( char [] buffer, int buffercount ) {
@@ -56,9 +64,10 @@ public class tiny_gp {
       return( ++buffercount );
 
     switch(buffer[buffercount]) {
-      case AND:
-      case OR:
-      case NOT:
+      case ADD:
+      case SUB:
+      case MUL:
+      case DIV:
       return( traverse( buffer, traverse( buffer, ++buffercount ) ) );
       }
     return( 0 ); // should never get here
@@ -103,9 +112,9 @@ public class tiny_gp {
     }
   }
 
-  boolean fitness_function( char [] Prog ) {
+  double fitness_function( char [] Prog ) {
     int i = 0, len;
-    boolean result, fit = false;
+    double result, fit = 0.0;
 
     len = traverse( Prog, 0 );
     for (i = 0; i < fitnesscases; i ++ ) {
@@ -116,7 +125,7 @@ public class tiny_gp {
       result = run();
       fit += Math.abs( result - targets[i][varnumber]);
       }
-    return( !(fit) );
+    return(-fit );
   }
 
   int grow( char [] buffer, int pos, int max, int depth ) {
@@ -137,9 +146,10 @@ public class tiny_gp {
     else  {
       prim = (char) (rd.nextInt(FSET_END - FSET_START + 1) + FSET_START);
       switch(prim) {
-      case AND:
-      case OR:
-      case NOT:
+      case ADD:
+      case SUB:
+      case MUL:
+      case DIV:
         buffer[pos] = prim;
 	one_child = grow( buffer, pos+1, max,depth-1);
 	if ( one_child < 0 )
@@ -160,17 +170,21 @@ public class tiny_gp {
       return( ++buffercounter );
       }
     switch(buffer[buffercounter]) {
-      case AND: System.out.print( "(");
+      case ADD: System.out.print( "(");
         a1=print_indiv( buffer, ++buffercounter );
         System.out.print( " + ");
         break;
-      case OR: System.out.print( "(");
+      case SUB: System.out.print( "(");
         a1=print_indiv( buffer, ++buffercounter );
         System.out.print( " - ");
         break;
-      case NOT: System.out.print( "(");
+      case MUL: System.out.print( "(");
         a1=print_indiv( buffer, ++buffercounter );
         System.out.print( " * ");
+        break;
+      case DIV: System.out.print( "(");
+        a1=print_indiv( buffer, ++buffercounter );
+        System.out.print( " / ");
         break;
       }
     a2=print_indiv( buffer, a1 );
@@ -299,9 +313,10 @@ public class tiny_gp {
         parentcopy[mutsite] = (char) rd.nextInt(varnumber+randomnumber);
       else
         switch(parentcopy[mutsite]) {
-      	case AND:
-      	case OR:
-      	case NOT:
+      	case ADD:
+      	case SUB:
+      	case MUL:
+      	case DIV:
            parentcopy[mutsite] =
               (char) (rd.nextInt(FSET_END - FSET_START + 1)
                      + FSET_START);
@@ -324,14 +339,14 @@ public class tiny_gp {
      	    "\n----------------------------------\n");
   }
 
-  public tiny_gp( String fname, long s ) {
+  public tiny_gp_og( String fname, long s ) {
     fitness =  new double[POPSIZE];
     seed = s;
     if ( seed >= 0 )
         rd.setSeed(seed);
     setup_fitness(fname);
     for ( int i = 0; i < FSET_START; i ++ )
-      x[i]= minrandom; //(maxrandom-minrandom)*rd.nextBoolean()+minrandom;
+      x[i]= (maxrandom-minrandom)*rd.nextDouble()+minrandom;
     pop = create_random_pop(POPSIZE, DEPTH, fitness );
   }
 
@@ -368,7 +383,7 @@ public class tiny_gp {
   }
 
   public static void main(String[] args) {
-    String fname = "problem.txt";
+    String fname = "problem_og.txt";
     long s = -1;
 
     if ( args.length == 2 ) {
@@ -379,7 +394,7 @@ public class tiny_gp {
       fname = args[0];
     }
 
-    tiny_gp gp = new tiny_gp(fname, s);
+    tiny_gp_og gp = new tiny_gp_og(fname, s);
     gp.evolve();
   }
 };
