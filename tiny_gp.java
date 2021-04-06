@@ -10,7 +10,7 @@ import java.io.*;
 import java.text.DecimalFormat;
 
 public class tiny_gp {
-  String fname = "problem.txt"; 
+  String fname = "logical_or.txt";
   double [] fitness;
   char [][] pop;
   static Random rd = new Random();
@@ -21,7 +21,6 @@ public class tiny_gp {
     FSET_START = AND,
     FSET_END = NOT;
   static boolean [] x = new boolean[FSET_START];
-  static double minrandom, maxrandom;
   static char [] program;
   static int PC;
   static int varnumber, fitnesscases, randomnumber;
@@ -37,7 +36,7 @@ public class tiny_gp {
   public static final double
     PMUT_PER_NODE  = 0.05,
     CROSSOVER_PROB = 0.9;
-  static double [][] targets;
+  static boolean [][] targets;
 
   boolean run() { /* Interpreter */
     char primitive = program[PC++];
@@ -77,10 +76,8 @@ public class tiny_gp {
       StringTokenizer tokens = new StringTokenizer(line);
       varnumber = Integer.parseInt(tokens.nextToken().trim());
       randomnumber = Integer.parseInt(tokens.nextToken().trim());
-      minrandom =	Double.parseDouble(tokens.nextToken().trim());
-      maxrandom =  Double.parseDouble(tokens.nextToken().trim());
       fitnesscases = Integer.parseInt(tokens.nextToken().trim());
-      targets = new double[fitnesscases][varnumber+1];
+      targets = new boolean[fitnesscases][varnumber+1];
       if (varnumber + randomnumber >= FSET_START )
         System.out.println("too many variables and constants");
 
@@ -88,7 +85,7 @@ public class tiny_gp {
         line = in.readLine();
         tokens = new StringTokenizer(line);
         for (j = 0; j <= varnumber; j++) {
-          targets[i][j] = Double.parseDouble(tokens.nextToken().trim());
+          targets[i][j] = Boolean.parseBoolean(tokens.nextToken().trim());
       	}
       }
       in.close();
@@ -98,7 +95,7 @@ public class tiny_gp {
       System.exit(0);
     }
     catch(Exception e ) {
-      System.out.println("ERROR: Incorrect data format");
+      System.out.println("ERROR: Incorrect data format " + e);
       System.exit(0);
     }
   }
@@ -317,8 +314,6 @@ public class tiny_gp {
    	    "\nPOPSIZE="+POPSIZE+"\nDEPTH="+DEPTH+
      	    "\nCROSSOVER_PROB="+CROSSOVER_PROB+
      	    "\nPMUT_PER_NODE="+PMUT_PER_NODE+
-     	    "\nMIN_RANDOM="+minrandom+
-     	    "\nMAX_RANDOM="+maxrandom+
      	    "\nGENERATIONS="+GENERATIONS+
      	    "\nTSIZE="+TSIZE+
      	    "\n----------------------------------\n");
@@ -331,8 +326,7 @@ public class tiny_gp {
         rd.setSeed(seed);
     setup_fitness(fname);
     for ( int i = 0; i < FSET_START; i ++ )
-      x[i]= false;
-      //x[i]= minrandom; //(maxrandom-minrandom)*rd.nextBoolean()+minrandom;
+      x[i]= rd.nextBoolean();
     pop = create_random_pop(POPSIZE, DEPTH, fitness );
   }
 
@@ -343,7 +337,7 @@ public class tiny_gp {
     print_parms();
     stats( fitness, pop, 0 );
     for ( gen = 1; gen < GENERATIONS; gen ++ ) {
-      if (  fbestpop > -1e-5 ) {
+      if (  fbestpop > -1e-5 ) { // best has fitness > -0.00001
       System.out.print("PROBLEM SOLVED\n");
       System.exit( 0 );
       }
@@ -369,7 +363,7 @@ public class tiny_gp {
   }
 
   public static void main(String[] args) {
-    String fname = "problem.txt";
+    String fname = "logical_or.txt";
     long s = -1;
 
     if ( args.length == 2 ) {
