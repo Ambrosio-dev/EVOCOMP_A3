@@ -21,7 +21,7 @@ public class tiny_gp {
     FSET_START = AND,
     FSET_END = NOT;
   static boolean [] x = new boolean[FSET_START];
-  static boolean minrandom, maxrandom;
+  static double minrandom, maxrandom;
   static char [] program;
   static int PC;
   static int varnumber, fitnesscases, randomnumber;
@@ -103,20 +103,20 @@ public class tiny_gp {
     }
   }
 
-  boolean fitness_function( char [] Prog ) {
+  double fitness_function( char [] Prog ) {
     int i = 0, len;
-    boolean result, fit = false;
-
+    double result, fit = 0.0;
+    /*
     len = traverse( Prog, 0 );
     for (i = 0; i < fitnesscases; i ++ ) {
       for (int j = 0; j < varnumber; j ++ )
           x[j] = targets[i][j];
       program = Prog;
       PC = 0;
-      result = run();
+      //result = run();
       fit += Math.abs( result - targets[i][varnumber]);
-      }
-    return( !(fit) );
+      } */
+    return( -fit );
   }
 
   int grow( char [] buffer, int pos, int max, int depth ) {
@@ -162,15 +162,15 @@ public class tiny_gp {
     switch(buffer[buffercounter]) {
       case AND: System.out.print( "(");
         a1=print_indiv( buffer, ++buffercounter );
-        System.out.print( " + ");
+        System.out.print( " && ");
         break;
       case OR: System.out.print( "(");
         a1=print_indiv( buffer, ++buffercounter );
-        System.out.print( " - ");
+        System.out.print( " || ");
         break;
       case NOT: System.out.print( "(");
         a1=print_indiv( buffer, ++buffercounter );
-        System.out.print( " * ");
+        System.out.print( " ! ");
         break;
       }
     a2=print_indiv( buffer, a1 );
@@ -331,7 +331,8 @@ public class tiny_gp {
         rd.setSeed(seed);
     setup_fitness(fname);
     for ( int i = 0; i < FSET_START; i ++ )
-      x[i]= minrandom; //(maxrandom-minrandom)*rd.nextBoolean()+minrandom;
+      x[i]= false;
+      //x[i]= minrandom; //(maxrandom-minrandom)*rd.nextBoolean()+minrandom;
     pop = create_random_pop(POPSIZE, DEPTH, fitness );
   }
 
