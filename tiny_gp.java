@@ -10,7 +10,7 @@ import java.io.*;
 import java.text.DecimalFormat;
 
 public class tiny_gp {
-  String fname = "logical_or.txt";
+  String fname = "problem.txt";
   double [] fitness;
   char [][] pop;
   static Random rd = new Random();
@@ -24,6 +24,9 @@ public class tiny_gp {
   static char [] program;
   static int PC;
   static int varnumber, fitnesscases, randomnumber;
+  // for reference: varnumber is number of variables
+  // fitness cases is how many combinations, for boolean expressions it's 2 ^ varnumber
+  // randomnumber is the number of terminals (i.e., true, false) that are not variables.
   static double fbestpop = 0.0, favgpop = 0.0;
   static long seed;
   static double avg_len;
@@ -45,7 +48,7 @@ public class tiny_gp {
     switch ( primitive ) {
       case AND : return( run() && run() );
       case OR : return( run() || run() );
-      case NOT : return( !(run()) );
+      case NOT : return( run() && !(run()) ); // instead of x1 ! x2, becomes x1 && !x2
       }
     return( false ); // should never get here
   }
@@ -102,18 +105,23 @@ public class tiny_gp {
 
   double fitness_function( char [] Prog ) {
     int i = 0, len;
-    double result, fit = 0.0;
-    /*
+    double fit = 1.0;
+    boolean result;
+    
     len = traverse( Prog, 0 );
     for (i = 0; i < fitnesscases; i ++ ) {
       for (int j = 0; j < varnumber; j ++ )
           x[j] = targets[i][j];
       program = Prog;
       PC = 0;
-      //result = run();
-      fit += Math.abs( result - targets[i][varnumber]);
-      } */
-    return( -fit );
+      result = run();
+      if (result == targets[i][varnumber])
+      {
+    	  fit *= 2; // the fitness becomes 2 ^ number of correct program states
+      }
+      } 
+    
+    return( fit );
   }
 
   int grow( char [] buffer, int pos, int max, int depth ) {
@@ -167,7 +175,7 @@ public class tiny_gp {
         break;
       case NOT: System.out.print( "(");
         a1=print_indiv( buffer, ++buffercounter );
-        System.out.print( " ! ");
+        System.out.print( " && !");
         break;
       }
     a2=print_indiv( buffer, a1 );
@@ -337,7 +345,7 @@ public class tiny_gp {
     print_parms();
     stats( fitness, pop, 0 );
     for ( gen = 1; gen < GENERATIONS; gen ++ ) {
-      if (  fbestpop > -1e-5 ) { // best has fitness > -0.00001
+      if (  fbestpop >= Math.pow(2, fitnesscases) ) { // best has fitness 2 ^ fitnesscases
       System.out.print("PROBLEM SOLVED\n");
       System.exit( 0 );
       }
@@ -363,7 +371,7 @@ public class tiny_gp {
   }
 
   public static void main(String[] args) {
-    String fname = "logical_or.txt";
+    String fname = "problem.txt";
     long s = -1;
 
     if ( args.length == 2 ) {
