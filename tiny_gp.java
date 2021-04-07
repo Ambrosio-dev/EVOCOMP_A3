@@ -228,8 +228,8 @@ public class tiny_gp {
     }
     avg_len = (double) node_count / POPSIZE;
     favgpop /= POPSIZE;
-    System.out.print("Generation="+gen+" Avg Fitness="+(-favgpop)+
-    		 " Best Fitness="+(-fbestpop)+" Avg Size="+avg_len+
+    System.out.print("Generation="+gen+" Avg Fitness="+(favgpop)+
+    		 " Best Fitness="+(fbestpop)+" Avg Size="+avg_len+
     		 "\nBest Individual: ");
     print_indiv( pop[best], 0 );
     System.out.print( "\n");
@@ -316,7 +316,7 @@ public class tiny_gp {
     return( parentcopy );
   }
 
-  void print_parms() {
+  static void print_parms() {
    System.out.print("-- TINY GP (Java version) --\n");
    System.out.print("SEED="+seed+"\nMAX_LEN="+MAX_LEN+
    	    "\nPOPSIZE="+POPSIZE+"\nDEPTH="+DEPTH+
@@ -326,6 +326,12 @@ public class tiny_gp {
      	    "\nTSIZE="+TSIZE+
      	    "\n----------------------------------\n");
   }
+
+  static void print_gen(int genNum) {
+    System.out.print("\n----------------------------------\n"
+    +"ATTEMPT "+genNum+": "+
+            "\n----------------------------------\n");
+   }
 
   public tiny_gp( String fname, long s ) {
     fitness =  new double[POPSIZE];
@@ -342,12 +348,12 @@ public class tiny_gp {
     int gen = 0, indivs, offspring, parent1, parent2, parent;
     double newfit;
     char []newind;
-    print_parms();
+    //print_parms();
     stats( fitness, pop, 0 );
     for ( gen = 1; gen < GENERATIONS; gen ++ ) {
       if (  fbestpop >= Math.pow(2, fitnesscases) ) { // best has fitness 2 ^ fitnesscases
       System.out.print("PROBLEM SOLVED\n");
-      System.exit( 0 );
+      return;
       }
       for ( indivs = 0; indivs < POPSIZE; indivs ++ ) {
       if ( rd.nextDouble() < CROSSOVER_PROB  ) {
@@ -372,17 +378,45 @@ public class tiny_gp {
 
   public static void main(String[] args) {
     String fname = "problem.txt";
-    long s = -1;
-
+    long[] s = new long[5];
+    long one = 1;
+    for ( int i = 1; i < 5; i ++ ) {
+      s[i] = one*i; 
+    }
+    int genNum = 1;
+    /*
     if ( args.length == 2 ) {
       s = Integer.valueOf(args[0]).intValue();
       fname = args[1];
-    }
+    } */
     if ( args.length == 1 ) {
       fname = args[0];
     }
 
-    tiny_gp gp = new tiny_gp(fname, s);
-    gp.evolve();
+    print_parms();
+
+    print_gen(genNum);
+    genNum += 1;
+    tiny_gp gp1 = new tiny_gp(fname, s[0]);
+    gp1.evolve();
+    
+    print_gen(genNum);
+    genNum += 1;
+    tiny_gp gp2 = new tiny_gp(fname, s[1]);
+    gp2.evolve();
+
+    print_gen(genNum);
+    genNum += 1;
+    tiny_gp gp3 = new tiny_gp(fname, s[2]);
+    gp3.evolve();
+
+    print_gen(genNum);
+    genNum += 1;
+    tiny_gp gp4 = new tiny_gp(fname, s[3]);
+    gp4.evolve();
+
+    print_gen(genNum);
+    tiny_gp gp5 = new tiny_gp(fname, s[4]);
+    gp5.evolve();
   }
 };
